@@ -60,20 +60,21 @@ def get_speech_script(mandi_name, crop_name, net_price, language="en"):
 
     return script
 
-def generate_speech(mandi_name, crop_name, net_price, language="en"):
+def generate_speech(mandi_name=None, crop_name=None, net_price=None, language="en", text=None):
     """
-    Synthesizes speech script into audio.
+    Synthesizes speech script into audio. Supports structured price parameters or direct text payloads.
 
     Parameters:
-        mandi_name (str): Name of winning mandi
-        crop_name (str): Name of crop
-        net_price (float): Realized net price in INR
+        mandi_name (str, optional): Name of winning mandi
+        crop_name (str, optional): Name of crop
+        net_price (float, optional): Realized net price in INR
         language (str): Language code ('en', 'hi', 'mr')
+        text (str, optional): Raw text script to synthesize directly
 
     Returns:
         dict: Audio metadata, localized text script, and base64 audio data
     """
-    lang_code = language.lower()
+    lang_code = language.lower() if language else "en"
     if lang_code not in ("en", "hi", "mr"):
         lang_code = "en"
 
@@ -84,7 +85,10 @@ def generate_speech(mandi_name, crop_name, net_price, language="en"):
         "mr": "mr"
     }.get(lang_code, "en")
 
-    script = get_speech_script(mandi_name, crop_name, net_price, lang_code)
+    if text:
+        script = text
+    else:
+        script = get_speech_script(mandi_name or "", crop_name or "", net_price or 0, lang_code)
     audio_base64 = None
     audio_format = "mp3"
     tts_engine_used = "none"

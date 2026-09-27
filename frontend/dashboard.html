@@ -26,7 +26,10 @@
         </div>
       </a>
 
-      <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+        <a href="/diagnose" class="btn btn-outline" style="min-height: 32px; padding: 2px 10px; font-size: 0.8rem; background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.4); width: auto;">
+          🔬 Disease Detection
+        </a>
         <a href="/buyer" class="btn btn-outline" style="min-height: 32px; padding: 2px 10px; font-size: 0.8rem; background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.4); width: auto;">
           🛒 Buyer Market
         </a>
@@ -66,6 +69,23 @@
           <span class="info-chip">🌱 <strong id="cropSelectedName">Cotton</strong></span>
           <span class="info-chip">📍 <strong id="homeMandiSelectedName">Nagpur</strong></span>
           <span class="info-chip">⚖️ <strong id="quantitySelectedValue">10 Quintals</strong></span>
+        </div>
+      </section>
+
+      <!-- Weather-Triggered Advisory Alerts Section -->
+      <section id="weatherAdvisorySection" class="card" style="margin-bottom: 1.25rem; background: #fafafa; border-top: 4px solid var(--accent-gold);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--primary-dark); display: flex; align-items: center; gap: 0.4rem;">
+            🌤️ Proactive Weather & Crop Stage Advisories
+          </h3>
+          <span style="font-size: 0.75rem; background: var(--accent-gold-bg); color: var(--accent-gold); padding: 0.2rem 0.5rem; border-radius: var(--radius-full); font-weight: 600;">
+            Rule-Engine Active
+          </span>
+        </div>
+        <div id="advisoryCardsContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">
+            Loading regional weather forecasts & crop growth stage...
+          </div>
         </div>
       </section>
 

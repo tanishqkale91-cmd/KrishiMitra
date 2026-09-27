@@ -186,8 +186,11 @@ async function fetchComparisonData(isSilent = false) {
     if (result.status === "success") {
       currentComparisonData = result.data;
       renderDashboardUI(currentComparisonData);
-      // Also fetch trend analytics
+      // Also fetch trend analytics and weather advisories
       fetchAnalytics(cropId);
+      if (currentComparisonData.crop) {
+        fetchWeatherAdvisories(homeMandiId, currentComparisonData.crop.name);
+      }
     } else {
       showToast("⚠️ " + (result.message || "Failed to calculate returns."));
     }
@@ -868,6 +871,111 @@ window.handleDeleteDeal = async function(dealId) {
     showToast("⚠️ Could not remove deal.");
   }
 };
+
+// ==========================================
+// 8.5 Weather-Triggered Advisory Alerts Engine
+// ==========================================
+async function fetchWeatherAdvisories(mandiId, cropName) {
+  const container = document.getElementById("advisoryCardsContainer");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`/api/weather-advisory?mandi_id=${mandiId}&crop=${encodeURIComponent(cropName)}&lang=${currentLang}`);
+    const data = await res.json();
+
+    if (data.status === "success" && data.alerts && data.alerts.length > 0) {
+      container.innerHTML = "";
+      data.alerts.forEach((alertItem) => {
+        const card = document.createElement("div");
+        card.className = "advisory-card";
+        
+        let borderCol = "var(--primary)";
+        let bgCol = "var(--primary-bg)";
+        let badgeBg = "var(--primary-subtle)";
+        let badgeCol = "var(--primary-dark)";
+        let icon = "💡";
+
+        if (alertItem.severity === "urgent") {
+          borderCol = "var(--danger)";
+          bgCol = "var(--danger-bg)";
+          badgeBg = "#fee2e2";
+          badgeCol = "var(--danger)";
+          icon = "⚠️";
+        } else if (alertItem.severity === "advisory") {
+          borderCol = "var(--accent-gold)";
+          bgCol = "var(--accent-gold-bg)";
+          badgeBg = "#fef3c7";
+          badgeCol = "var(--accent-gold)";
+          icon = "⚡";
+        }
+
+        card.style.cssText = `
+          background: ${bgCol};
+          border-left: 4px solid ${borderCol};
+          padding: 0.85rem 1rem;
+          border-radius: var(--radius-sm);
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 0.75rem;
+          box-shadow: var(--shadow-sm);
+        `;
+
+        const audioBase64 = alertItem.audio ? alertItem.audio.audio_base64 : null;
+
+        card.innerHTML = `
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;">
+              <span style="font-size: 1.1rem;">${icon}</span>
+              <strong style="font-size: 0.9rem; color: var(--text-main);">${alertItem.alert_type}</strong>
+              <span style="font-size: 0.75rem; background: ${badgeBg}; color: ${badgeCol}; padding: 0.15rem 0.5rem; border-radius: var(--radius-full); font-weight: 700;">
+                ${alertItem.crop_stage ? alertItem.crop_stage.toUpperCase() : "ADVISORY"}
+              </span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-main); margin: 0.2rem 0;">${alertItem.message_text}</p>
+            <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.2rem;">
+              Valid until: ${alertItem.valid_until || "Next 48 Hours"}
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.3rem; align-items: center;">
+            ${audioBase64 ? `<button type="button" class="listen-adv-btn btn btn-secondary" style="width: auto; padding: 0.25rem 0.6rem; font-size: 0.78rem;" data-audio="${audioBase64}">🔊 Listen</button>` : ''}
+            <button type="button" class="dismiss-adv-btn" style="background: transparent; border: none; font-size: 1.1rem; cursor: pointer; color: var(--text-muted); padding: 0 0.2rem;" aria-label="Dismiss Alert">✕</button>
+          </div>
+        `;
+
+        // Dismiss handler
+        const dismissBtn = card.querySelector(".dismiss-adv-btn");
+        if (dismissBtn) {
+          dismissBtn.addEventListener("click", () => {
+            card.remove();
+            if (container.children.length === 0) {
+              container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">All weather advisories cleared.</div>`;
+            }
+          });
+        }
+
+        // Listen TTS handler
+        const listenBtn = card.querySelector(".listen-adv-btn");
+        if (listenBtn) {
+          listenBtn.addEventListener("click", (e) => {
+            const b64 = e.target.getAttribute("data-audio");
+            if (b64) {
+              const aud = new Audio("data:audio/mp3;base64," + b64);
+              aud.play().catch(err => console.log("Audio play blocked:", err));
+            }
+          });
+        }
+
+        container.appendChild(card);
+      });
+    } else {
+      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">No active weather alerts for current crop stage. Weather conditions normal.</div>`;
+    }
+  } catch (err) {
+    console.error("Advisory fetch error:", err);
+    container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem;">Could not load weather advisories.</div>`;
+  }
+}
 
 // ==========================================
 // 9. Initialization & Event Handlers

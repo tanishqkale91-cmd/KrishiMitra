@@ -22,6 +22,16 @@ else:
 
 DB_PATH = os.environ.get("KRISHIMITRA_DB_PATH", DEFAULT_DB)
 
+# Load .env file if present
+env_file = BASE_DIR.parent / ".env"
+if env_file.exists():
+    with open(env_file, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip())
+
 class Config:
     """Application Configuration Settings"""
     DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in ("true", "1")
@@ -32,6 +42,7 @@ class Config:
     USE_MOCK_DATA = os.environ.get("USE_MOCK_DATA", "False").lower() in ("true", "1")
     
     # External API Keys
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
     AGMARKNET_API_KEY = os.environ.get("AGMARKNET_API_KEY", "579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b")
     AGMARKNET_RESOURCE_ID = os.environ.get("AGMARKNET_RESOURCE_ID", "9ef84268-d588-465a-a308-a864a43d0070")
     AGMARKNET_FORMAT = "xml"
@@ -45,3 +56,4 @@ class Config:
     
     # Default transport rate per km per quintal (INR)
     DEFAULT_TRANSPORT_RATE = 0.80
+

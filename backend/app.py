@@ -39,6 +39,9 @@ from services.deal_listing_service import create_deal_listing
 from services.buyer_feed_service import get_buyer_feed
 from services.deal_inquiry_service import register_inquiry
 from models.deal_model import DealModel
+from models.diagnosis_model import DiagnosisModel
+from services.pest_diagnosis_service import diagnose_crop_image
+from services.weather_advisory_engine import generate_weather_advisories
 from admin.admin_panel import AdminController
 
 # Resolve frontend directory path
@@ -84,6 +87,11 @@ def serve_buyer():
     """Serves Screen 4: Buyer Marketplace Screen."""
     buyer_dir = FRONTEND_DIR / "buyer"
     return send_from_directory(str(buyer_dir), "index.html")
+
+@app.route("/diagnose")
+def serve_diagnose():
+    """Serves Crop Disease & Pest Diagnosis Screen."""
+    return send_from_directory(str(FRONTEND_DIR), "diagnose.html")
 
 @app.route("/<path:path>")
 def serve_static(path):
@@ -272,6 +280,106 @@ def crop_recommendations():
     query = request.args.get("q", "")
     recs = CropModel.get_recommendations(query)
     return jsonify({"status": "success", "recommendations": recs})
+
+# ==========================================
+# Crop Pest Diagnosis & Weather Advisory API
+# ==========================================
+
+@app.route("/api/diagnose-crop", methods=["POST"])
+def diagnose_crop_endpoint():
+    """
+    Accepts crop image upload + crop type + language preference.
+    Runs deep learning vision model, logs diagnosis, and generates localized TTS audio.
+    """
+    img_file = request.files.get("image") or request.files.get("file")
+    if not img_file:
+        return jsonify({"status": "error", "message": "Image file is required for diagnosis"}), 400
+
+    crop_name = request.form.get("crop") or request.args.get("crop") or "Cotton"
+    language = request.form.get("language") or request.form.get("lang") or request.args.get("lang") or "en"
+    location = request.form.get("location") or "Local Farm"
+
+    try:
+        image_bytes = img_file.read()
+        filename = img_file.filename or "uploaded_crop.jpg"
+
+        # Save image for audit history log
+        upload_dir = FRONTEND_DIR / "uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        save_path = upload_dir / filename
+        with open(save_path, "wb") as f:
+            f.write(image_bytes)
+        rel_img_path = f"uploads/{filename}"
+
+        # Execute deep learning inference service
+        diag_res = diagnose_crop_image(image_bytes, crop_hint=crop_name)
+
+        # Log history record in SQLite database
+        DiagnosisModel.create(
+            farmer_location=location,
+            crop=crop_name,
+            image_path=rel_img_path,
+            disease_detected=diag_res.get("disease_name", "Unknown"),
+            confidence=diag_res.get("confidence_score", 0.0)
+        )
+
+        # Build localized voice synthesis payload
+        lang_code = language.lower() if language else "en"
+        diag_status = diag_res.get("status", "valid_diagnosis")
+
+        if diag_status != "valid_diagnosis":
+            speech_text = diag_res.get("message", "Invalid photo submission.")
+        else:
+            dis_name = diag_res.get("disease_name", "")
+            sev = diag_res.get("severity_level", "")
+            org_tx = diag_res.get("treatment_organic", "")
+            chem_tx = diag_res.get("treatment_chemical", "")
+
+            if lang_code == "mr":
+                speech_text = f"पिकातील निदान: {dis_name}. तीव्रता: {sev}. सेंद्रिय उपाय: {org_tx}. रासायनिक उपाय: {chem_tx}."
+            elif lang_code == "hi":
+                speech_text = f"फसल का निदान: {dis_name}। गंभीरता: {sev}। जैविक उपचार: {org_tx}। रासायनिक उपचार: {chem_tx}।"
+            else:
+                speech_text = f"Crop diagnosis: {dis_name}. Severity level: {sev}. Recommended organic treatment: {org_tx}. Chemical treatment: {chem_tx}."
+
+        audio_res = generate_speech(text=speech_text, language=lang_code)
+
+        return jsonify({
+            "status": "success",
+            "crop": crop_name,
+            "diagnosis": diag_res,
+            "audio": audio_res
+        })
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Diagnosis failed: {str(e)}"}), 500
+
+@app.route("/api/weather-advisory", methods=["GET"])
+def weather_advisory_endpoint():
+    """
+    Fetches location weather forecast, evaluates growth stage, and returns proactive rule-based advisories.
+    """
+    try:
+        mandi_id = request.args.get("mandi_id", type=int) or 1
+        crop = request.args.get("crop") or "Cotton"
+        sowing_date = request.args.get("sowing_date")
+        language = request.args.get("lang") or request.args.get("language") or "en"
+
+        advisories = generate_weather_advisories(mandi_id=mandi_id, crop_name=crop, sowing_date=sowing_date)
+
+        # Generate voice audio for each active advisory alert
+        for adv in advisories:
+            adv["audio"] = generate_speech(text=adv["message_text"], language=language)
+
+        return jsonify({
+            "status": "success",
+            "mandi_id": mandi_id,
+            "crop": crop,
+            "alerts": advisories
+        })
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Weather advisory error: {str(e)}"}), 500
 
 # ==========================================
 # Admin Panel Authentication & CRUD Endpoints

@@ -128,8 +128,35 @@ def test_all():
     assert inactive_inquiry["status"] == "error", "Inactive/sold deal must reject new inquiries"
     print(f"[PASS] Deal marked as sold and correctly rejected subsequent inquiries.")
 
+    # 9. Test Feature 1: Pest & Disease Diagnosis
+    from services.pest_diagnosis_service import diagnose_crop_image
+    import io
+    from PIL import Image
+    
+    # Create sample synthetic test image
+    img = Image.new("RGB", (300, 300), color=(100, 150, 80))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    diag_res = diagnose_crop_image(buf.getvalue(), crop_hint="cotton")
+    assert "disease_name" in diag_res
+    assert "confidence_score" in diag_res
+    assert "treatment_organic" in diag_res
+    print(f"[PASS] Feature 1 Pest Diagnosis tested successfully: {diag_res['disease_name']} (Conf: {diag_res['confidence_score']})")
+
+    # 10. Test Feature 2: Weather-Triggered Crop Stage Advisories
+    from services.crop_stage_calculator import calculate_crop_stage
+    from services.weather_advisory_engine import generate_weather_advisories
+
+    stage_res = calculate_crop_stage("Cotton", sowing_date="2026-07-01")
+    assert "stage" in stage_res
+    print(f"[PASS] Feature 2 Crop Stage Calculator tested successfully: {stage_res['stage']} ({stage_res['days_since_sowing']} days)")
+
+    advisories = generate_weather_advisories(mandi_id=1, crop_name="Cotton")
+    assert isinstance(advisories, list) and len(advisories) > 0
+    print(f"[PASS] Feature 2 Weather Advisory Engine tested successfully: Generated {len(advisories)} advisories.")
+
     print("\n==================================================")
-    print("🎉 ALL KRISHIMITRA SERVICE & MARKETPLACE TESTS PASSED!")
+    print("🎉 ALL KRISHIMITRA SERVICE & NEW FEATURE TESTS PASSED!")
     print("==================================================")
 
 if __name__ == "__main__":

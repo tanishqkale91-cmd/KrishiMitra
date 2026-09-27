@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KrishiMitra - Crop Disease & Pest Detection</title>
+  <meta name="description" content="AI-assisted crop disease and pest diagnosis from leaf photos with organic and chemical treatment advice.">
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- App Header with Brand and Navigation -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="/" class="brand-wrapper">
+        <span class="brand-icon">🌾</span>
+        <div>
+          <h1 class="brand-title" data-i18n="appTitle">KrishiMitra</h1>
+          <p class="brand-subtitle">Crop Disease & Pest Diagnosis</p>
+        </div>
+      </a>
+
+      <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+        <a href="/" class="btn btn-outline" style="min-height: 32px; padding: 2px 10px; font-size: 0.8rem; background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.4); width: auto;">
+          📊 Price Estimator
+        </a>
+        <a href="/buyer" class="btn btn-outline" style="min-height: 32px; padding: 2px 10px; font-size: 0.8rem; background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.4); width: auto;">
+          🛒 Buyer Market
+        </a>
+
+        <!-- Multilingual Language Selector -->
+        <div class="lang-selector" role="group" aria-label="Language Selector">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="hi">हिन्दी</button>
+          <button class="lang-btn" data-lang="mr">मराठी</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="main-content">
+
+    <!-- Official Agronomic Disclaimer Banner -->
+    <div class="disclaimer-banner" style="background: #fffbe3; border: 1px solid #fde047; padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.88rem; color: #854d0e; display: flex; gap: 0.6rem; align-items: flex-start; box-shadow: var(--shadow-sm);">
+      <span style="font-size: 1.3rem; line-height: 1;">⚠️</span>
+      <div>
+        <strong>Disclaimer:</strong> This is an AI-assisted suggestion, not a certified diagnosis. For severe or uncertain cases, consult your local Krishi Vigyan Kendra.
+      </div>
+    </div>
+
+    <!-- Diagnose Input Card -->
+    <section class="card" aria-labelledby="diagnoseHeading">
+      <h2 id="diagnoseHeading" style="font-size: 1.3rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 1rem;">
+        🔍 AI Crop Leaf Photo Diagnosis
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+        Take or upload a clear photo of the infected crop leaf to identify diseases and receive instant treatment advice.
+      </p>
+
+      <form id="diagnoseForm">
+        <!-- Crop Type Select -->
+        <div class="form-group">
+          <label for="cropSelect" class="form-label">
+            <span class="label-icon">🌱</span>
+            <span>Select Crop</span>
+          </label>
+          <div class="select-wrapper">
+            <select id="cropSelect" class="form-select" required>
+              <option value="Cotton (कपास / कापूस)" selected>Cotton (कपास / कापूस)</option>
+              <option value="Soybean (सोयाबीन)">Soybean (सोयाबीन)</option>
+              <option value="Wheat (गेहूं / गहू)">Wheat (गेहूं / गहू)</option>
+              <option value="Onion (प्याज / कांदा)">Onion (प्याज / कांदा)</option>
+              <option value="Tur / Arhar (तूर / अरहर)">Tur / Arhar (तूर / अरहर)</option>
+              <option value="Gram / Chana (चना / हरभरा)">Gram / Chana (चना / हरभरा)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Image Upload Input -->
+        <div class="form-group">
+          <label for="imageInput" class="form-label">
+            <span class="label-icon">📷</span>
+            <span>Upload or Take Leaf Photo</span>
+          </label>
+          <div style="border: 2px dashed var(--border-color); padding: 1.5rem 1rem; border-radius: var(--radius-md); text-align: center; background: #fafafa; cursor: pointer;" id="dropArea">
+            <input type="file" id="imageInput" accept="image/*" capture="environment" style="display: none;" required>
+            <div id="uploadPlaceholder">
+              <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">📸</span>
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('imageInput').click()" style="width: auto; display: inline-block;">
+                Choose Photo / Open Camera
+              </button>
+              <p style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.5rem;">Supports JPG, PNG (Max 10MB)</p>
+            </div>
+            
+            <!-- Image Preview Box -->
+            <div id="imagePreviewContainer" style="display: none; position: relative;">
+              <img id="imagePreview" src="" alt="Crop Leaf Preview" style="max-height: 220px; max-width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: contain;">
+              <div style="margin-top: 0.5rem;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('imageInput').click()" style="width: auto; display: inline-block; padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                  Change Photo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="submitBtn" class="btn btn-primary" style="margin-top: 1rem;">
+          🔍 Diagnose Crop Disease
+        </button>
+      </form>
+    </section>
+
+    <!-- Loading State -->
+    <div id="diagnosisLoading" style="display: none; text-align: center; padding: 2.5rem 1rem;">
+      <div style="font-size: 3rem; animation: pulseBar 1s infinite alternate;">🔬</div>
+      <h3 style="margin-top: 1rem; color: var(--primary-dark);">Analyzing Leaf Patterns with AI...</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Comparing image features against plant disease database</p>
+    </div>
+
+    <!-- Status 1: Not a Plant Warning Card -->
+    <section id="notAPlantCard" class="card" style="display: none; margin-top: 1.5rem; border-top: 4px solid var(--danger); background: #fef2f2;">
+      <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
+        <span style="font-size: 2.2rem; line-height: 1;">🚫</span>
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--danger);">No Plant Material Detected</h3>
+          <p id="notAPlantMsg" style="font-size: 0.92rem; color: var(--text-main); margin-top: 0.4rem; line-height: 1.5;">
+            No plant or crop material detected in this image. Please take a clear photo of the affected leaf or crop part.
+          </p>
+          <div style="margin-top: 0.85rem;">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('imageInput').click()" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.82rem;">
+              📸 Retake Photo
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Status 2: Crop Selection Mismatch Card -->
+    <section id="cropMismatchCard" class="card" style="display: none; margin-top: 1.5rem; border-top: 4px solid var(--accent-gold); background: #fffbe3;">
+      <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
+        <span style="font-size: 2.2rem; line-height: 1;">⚠️</span>
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--accent-gold);">Crop Selection Mismatch</h3>
+          <p id="cropMismatchMsg" style="font-size: 0.92rem; color: var(--text-main); margin-top: 0.4rem; line-height: 1.5;">
+            This image shows a different crop than selected. Please check your crop selection or re-upload a matching photo.
+          </p>
+          <div style="margin-top: 0.85rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('cropSelect').focus()" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.82rem;">
+              ✏️ Change Crop Selection
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('imageInput').click()" style="width: auto; padding: 0.35rem 0.85rem; font-size: 0.82rem;">
+              📸 Re-upload Photo
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Diagnosis Result Card -->
+    <section id="diagnosisResult" class="card" style="display: none; margin-top: 1.5rem; border-top: 4px solid var(--primary);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; flex-wrap: wrap;">
+        <div>
+          <span id="severityBadge" class="badge" style="background: var(--danger-bg); color: var(--danger); font-size: 0.8rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
+            High Severity
+          </span>
+          <h3 id="diseaseTitle" style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-top: 0.4rem;">
+            Cotton Bacterial Blight
+          </h3>
+        </div>
+        <button type="button" id="listenBtn" class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.9rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+          🔊 Listen Advice
+        </button>
+      </div>
+
+      <!-- Confidence Bar -->
+      <div style="margin-top: 1rem; background: var(--primary-bg); padding: 0.75rem 1rem; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.88rem; font-weight: 600; color: var(--primary-dark);">AI Detection Confidence</span>
+        <strong id="confidenceVal" style="font-size: 1.1rem; color: var(--primary);">88%</strong>
+      </div>
+
+      <!-- Uncommon Regional Disease Warning Banner -->
+      <div id="regionalWarningBanner" style="display: none; margin-top: 1rem; background: #fffbe3; border: 1px solid #fde047; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; color: #854d0e;">
+        <strong>⚠️ Uncommon Regional Diagnosis:</strong> This disease is uncommon for this region — please verify with a local agriculture expert before acting on it.
+      </div>
+
+      <!-- Visual Evidence & AI Justification Box -->
+      <div id="visualEvidenceBox" style="margin-top: 1rem; background: #f8fafc; border: 1px solid var(--border-color); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-main);">
+        <strong style="color: var(--text-muted);">👁️ Visual Evidence & AI Justification:</strong>
+        <p id="visualEvidenceText" style="margin-top: 0.25rem; color: var(--text-main); font-size: 0.85rem;"></p>
+      </div>
+
+      <!-- Treatment Details Grid -->
+      <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Organic Treatment -->
+        <div style="background: #f0fdf4; border-left: 4px solid var(--primary); padding: 1rem; border-radius: var(--radius-sm);">
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.3rem;">
+            🌿 Recommended Organic Treatment
+          </h4>
+          <p id="organicTreatment" style="font-size: 0.9rem; color: var(--text-main);">
+            Apply Neem cake to soil and spray Pseudomonas fluorescens (5g/L) on leaves.
+          </p>
+        </div>
+
+        <!-- Chemical Treatment & Dosage -->
+        <div style="background: #fefce8; border-left: 4px solid var(--accent-gold); padding: 1rem; border-radius: var(--radius-sm);">
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--accent-gold); margin-bottom: 0.3rem;">
+            🧪 Chemical Treatment & Recommended Dosage
+          </h4>
+          <p id="chemicalTreatment" style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.4rem;">
+            Copper Oxychloride 50% WP (2.5g/L) + Streptocycline (0.1g/L) spray.
+          </p>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            <strong>Dosage:</strong> <span id="dosageVal">500-600 grams per acre in 200L water</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/js/diagnose.js"></script>
+</body>
+</html>

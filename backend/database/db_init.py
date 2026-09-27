@@ -100,6 +100,22 @@ def init_db(db_path=None):
         inquired_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (deal_id) REFERENCES deals(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS diagnosis_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        farmer_location TEXT,
+        crop TEXT,
+        image_path TEXT,
+        disease_detected TEXT,
+        confidence REAL,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS weather_cache (
+        cache_key TEXT PRIMARY KEY,
+        response_json TEXT NOT NULL,
+        cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
     """
 
     with get_db_connection(db_path) as conn:
